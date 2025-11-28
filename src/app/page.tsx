@@ -39,14 +39,14 @@ export default function Home() {
 
         <div className="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
           <p className="mb-6 text-slate-300">
-            Aşağıdaki butona basarak Farcaster'da bir selam gönder!
+            Aşağıdaki butona basarak Farcaster&apos;da bir selam gönderin!
           </p>
 
           <button
             onClick={handleCastButton}
             className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold rounded-xl transition-all transform active:scale-95 text-lg"
           >
-            {/* Hata veren metin kaldırıldı. */}
+            📢 &quot;Hello World&quot; Cast At 
           </button>
         </div>
 
