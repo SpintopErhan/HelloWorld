@@ -3,52 +3,54 @@
 import { useEffect, useState, useCallback } from "react";
 // @farcaster/frame-sdk kütüphanesinin istemci tarafında yüklendiğinden emin olmak için
 // import'u burada tutmak doğru. Sunucu tarafında hata vermemesi için "use client" önemli.
-import sdk from "@farcaster/frame-sdk";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
 
   // SDK'yı SADECE BİR KEZ Başlat (Initialize)
+   // SDK'yı SADECE BİR KEZ Başlat (Initialize)
   useEffect(() => {
-    // SDK'ya uygulamanın hazır olduğunu bildir
-    // Bu işlem yalnızca client tarafında çalışmalıdır.
-    // Next.js'de "use client" ile bu garanti edilir.
-    if (sdk) { // SDK nesnesinin varlığını kontrol etmek her zaman iyi bir pratiktir.
-      sdk.actions.ready(); 
-      setIsSDKLoaded(true);
-    } else {
-      console.warn("Farcaster SDK yüklenemedi veya kullanıma hazır değil.");
-      // Hata durumunu yönetmek için burada isSDKLoaded'ı false bırakabiliriz
-      // veya bir error state'i tutabiliriz.
-    }
-    // Boş bağımlılık dizisi, bu efektin sadece bileşen mount edildiğinde bir kez çalışmasını sağlar.
-  }, []); 
+    const initSDK = async () => {
+      if (!sdk) {
+        console.warn("Farcaster SDK yüklenemedi.");
+        return;
+      }
+
+      try {
+        await sdk.actions.ready();     // BU SATIRA AWAIT EKLE!
+        setIsSDKLoaded(true);
+      } catch (err) {
+        console.error("Farcaster SDK ready hatası:", err);
+      }
+    };
+
+    initSDK();
+  }, []);
 
   // src/app/page.tsx içinde
-const handleCastButton = useCallback(() => {
-    
-    // 1. Paylaşılacak Metin (URL Encode Edilmiş Hali)
-    const castText = "Hello World";
+const handleCastButton = useCallback(async () => {
+  if (!isSDKLoaded) return;
+
+  try {
+    // Manuel compose URL – text + embed URL
+    const castText = "Hello World! Farcaster Miniapp’i dene!";
     const encodedCastText = encodeURIComponent(castText);
     
-    // 2. Uygulamanın Gömüleceği URL (Miniapp'in Kendi Adresi)
-    // Bu, Cast altında görünecek uygulama penceresini temsil eder.
-    const embedUrl = "https://helloworld-six-omega.vercel.app/";
+    const embedUrl = "https://helloworld-six-omega.vercel.app/";  // Senin domain'in
     const encodedEmbedUrl = encodeURIComponent(embedUrl);
     
-    // 3. İKİ BİLGİYİ İÇEREN Compose URL'si
-    // a) text parametresi: Cast metni
-    // b) embed parametresi: Cast altına gömülecek URL
-    const finalComposeUrl = `https://farcaster.xyz/~/compose?text=${encodedCastText}&embeds[]=${encodedEmbedUrl}`; 
+    const finalComposeUrl = `https://farcaster.xyz/~/compose?text=${encodedCastText}&embeds[]=${encodedEmbedUrl}`;
     
-    // 4. Warpcast penceresini açar
-    // Artık sadece bu tek URL'yi açmanız yeterli.
-    if (sdk) { 
-        sdk.actions.openUrl(finalComposeUrl);
-    } else {
-        console.error("Farcaster SDK henüz yüklenmedi.");
-    }
-}, []);
+    // SDK ile pencereyi aç
+    await sdk.actions.openUrl(finalComposeUrl);
+    
+    alert("Cast hazırlandı! Embed ile birlikte atıldı 🎉");
+  } catch (err) {
+    console.error("Cast hatası:", err);
+    alert("Cast açılamadı.");
+  }
+}, [isSDKLoaded]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-4">

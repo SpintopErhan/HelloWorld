@@ -1,33 +1,39 @@
 import type { Metadata } from 'next';
 
-// Uygulamanızın canlı URL'sini sabitleyelim
-const appUrl = "https://helloworld-six-omega.vercel.app/";
+const appUrl = "https://helloworld-six-omega.vercel.app";
 
 export const metadata: Metadata = {
-  // 1. Temel SEO ve Tarayıcı Etiketleri
-  title: 'Hello World Farcaster Miniapp',
-  description: 'Farcaster üzerinde "Hello World" mesajı paylaşın!',
-  
-  // 2. Open Graph Etiketleri (Genel Sosyal Medya Paylaşımı için)
+  title: "Hello World Miniapp",
+  description: "Farcaster'da ilk Miniapp deneyimin!",
+
   openGraph: {
-    title: 'Hello World Farcaster Miniapp',
-    description: 'Hemen aç ve ilk Cast’ini at!',
-    images: [`${appUrl}frame_image.png`],
+    title: "Hello World Miniapp",
+    description: "Tıkla ve Miniapp'i Farcaster içinde aç!",
+    images: [`${appUrl}/frame_image.png`],
     url: appUrl,
   },
 
-  // 3. Farcaster Frame Metadata Etiketleri (Embedding için KRİTİK)
+  // YENİ ve ZORUNLU: Miniapp embed için
   other: {
-    // Frame sürümünü belirtir
-    'fc:frame': 'vNext',
-    
-    // Frame'de gösterilecek görselin URL'si
-    'fc:frame:image': `${appUrl}frame_image.png`, 
-    
-    // DİKKAT: Frame butonları, aksiyonları (post/redirect/link) ve post_url alanı 
-    // yerel Miniapp açılışını zorlamak için TAMAMEN KALDIRILMIŞTIR.
-    // Artık sadece gömülü görselin kendisine tıklanması beklenir.
-  }
-};
+    // Miniapp olduğunu bildir
+    "fc:miniapp": JSON.stringify({
+      version: "1",
+      imageUrl: `${appUrl}/frame_image.png`,        // Embed'de görünecek büyük resim
+      button: {
+        title: "Miniapp'i Aç 🚀",                    // Cast altındaki buton yazısı
+        action: {
+          type: "launch_miniapp",                    // Bu çok önemli! Client içinde açar
+          name: "Hello World Miniapp",
+          // url: otomatik current page olur, yazmasan da olur
+          splashImageUrl: `${appUrl}/frame_image.png`, // Açılırken splash ekranı (isteğe bağlı)
+          splashBackgroundColor: "#1e1b4b"            // Mor tonu örnek (isteğe bağlı)
+        }
+      }
+    }),
 
-export default metadata;
+    // Geriye uyumluluk için eski frame tag'ini de bırak (zarar vermez)
+    "fc:frame": "vNext",
+    "fc:frame:image": `${appUrl}/frame_image.png`,
+    // Buton eklemiyoruz çünkü Miniapp butonu fc:miniapp üstünden geliyor
+  },
+};
