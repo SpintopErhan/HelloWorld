@@ -1,17 +1,10 @@
-// app/layout.tsx  ← TAM OLARAK BÖYLE YAP
+// app/layout.tsx → %100 ÇALIŞACAK SON HALİ
 
 import "./globals.css";
-
-const baseUrl = "https://helloworld-six-omega.vercel.app";
 
 export const metadata = {
   title: "Hello World Miniapp",
   description: "Farcaster Miniapp Demo",
-  openGraph: {
-    title: "Hello World Miniapp",
-    description: "Tıkla ve direkt Miniapp içinde aç!",
-    images: [`${baseUrl}/frame_image.png`],
-  },
 };
 
 export default function RootLayout({
@@ -22,31 +15,20 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <head>
-        {/* BURASI HAYATİ – MANUEL OLARAK EKLEMEK ZORUNDASIN */}
+        {/* YOINK GİBİ – KESİN ÇALIŞIR JSON */}
         <meta
           name="fc:miniapp"
-          content={JSON.stringify({
-            version: "1",
-            imageUrl: `${baseUrl}/frame_image.png`,
-            button: {
-              title: "Miniapp'i Aç",
-              action: {
-                type: "launch_miniapp",
-                name: "Hello World Miniapp",
-              },
-            },
-          })}
-        />
+content={"{\"version\":\"1\",\"imageUrl\":\"https://helloworld-six-omega.vercel.app/frame_image.png\",\"button\":{\"title\":\"Miniapp'i Aç 🚀\",\"action\":{\"type\":\"launch_miniapp\",\"name\":\"Hello World Miniapp\",\"url\":\"https://helloworld-six-omega.vercel.app\",\"splashImageUrl\":\"https://helloworld-six-omega.vercel.app/frame_image.png\",\"splashBackgroundColor\":\"#1e1b4b\"}}}"}    
+    />
 
-        {/* Eski client’lar için geriye uyumluluk */}
+        {/* Geriye uyumluluk – eski client’lar için */}
         <meta name="fc:frame" content="vNext" />
-        <meta name="fc:frame:image" content={`${baseUrl}/frame_image.png`} />
+        <meta name="fc:frame:image" content="https://helloworld-six-omega.vercel.app/frame_image.png" />
         <meta name="fc:frame:image:aspect_ratio" content="1.91:1" />
 
-        {/* Opsiyonel: Daha iyi görünüm için */}
-        <meta property="og:image" content={`${baseUrl}/frame_image.png`} />
+        {/* OG tags */}
+        <meta property="og:image" content="https://helloworld-six-omega.vercel.app/frame_image.png" />
         <meta property="og:title" content="Hello World Miniapp" />
-        <meta property="og:description" content="Farcaster Miniapp Demo" />
       </head>
       <body>{children}</body>
     </html>
