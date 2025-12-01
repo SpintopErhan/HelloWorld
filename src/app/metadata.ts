@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Hello World Farcaster Miniapp',
     description: 'Hemen aç ve ilk Cast’ini at!',
-    images: [`${appUrl}icon.png`], // icon.png public klasöründe olmalı
+    images: [`${appUrl}frame_image.png`],
     url: appUrl,
   },
 
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     // Frame sürümünü belirtir
     'fc:frame': 'vNext',
     
-    // Frame'de gösterilecek görselin URL'si (icon.png)
-    'fc:frame:image': `${appUrl}icon.png`,
+    // Frame'de gösterilecek görselin URL'si (frame_image.png)
+    'fc:frame:image': `${appUrl}frame_image.png`,
     
     // Birinci Buton Tanımı: Uygulamayı Açma
     'fc:frame:button:1': 'Uygulamayı Başlat (Launch App)', 
