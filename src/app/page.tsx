@@ -24,21 +24,31 @@ export default function Home() {
     // Boş bağımlılık dizisi, bu efektin sadece bileşen mount edildiğinde bir kez çalışmasını sağlar.
   }, []); 
 
-  const handleCastButton = useCallback(() => {
-    // Farcaster Compose Intent URL'si
-    // Metni bir sabit değişkende tutmak veya dinamik hale getirmek daha iyi olabilir.
+  // src/app/page.tsx içinde
+const handleCastButton = useCallback(() => {
+    
+    // 1. Paylaşılacak Metin (URL Encode Edilmiş Hali)
     const castText = "Hello World";
     const encodedCastText = encodeURIComponent(castText);
-    const castUrl = `https://farcaster.xyz/~/compose?text=${encodedCastText}`; 
     
-    // Warpcast penceresini açar.
-    if (sdk) { // SDK'nın yüklenip yüklenmediğini tekrar kontrol etmek daha güvenli olabilir.
-        sdk.actions.openUrl(castUrl);
+    // 2. Uygulamanın Gömüleceği URL (Miniapp'in Kendi Adresi)
+    // Bu, Cast altında görünecek uygulama penceresini temsil eder.
+    const embedUrl = "https://helloworld-six-omega.vercel.app/";
+    const encodedEmbedUrl = encodeURIComponent(embedUrl);
+    
+    // 3. İKİ BİLGİYİ İÇEREN Compose URL'si
+    // a) text parametresi: Cast metni
+    // b) embed parametresi: Cast altına gömülecek URL
+    const finalComposeUrl = `https://farcaster.xyz/~/compose?text=${encodedCastText}&embeds[]=${encodedEmbedUrl}`; 
+    
+    // 4. Warpcast penceresini açar
+    // Artık sadece bu tek URL'yi açmanız yeterli.
+    if (sdk) { 
+        sdk.actions.openUrl(finalComposeUrl);
     } else {
-        console.error("Farcaster SDK henüz yüklenmedi, URL açılamıyor.");
-        // Kullanıcıya bir hata mesajı gösterebiliriz.
+        console.error("Farcaster SDK henüz yüklenmedi.");
     }
-  }, []);
+}, []);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-4">
