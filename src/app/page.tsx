@@ -1,32 +1,43 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+// @farcaster/frame-sdk kütüphanesinin istemci tarafında yüklendiğinden emin olmak için
+// import'u burada tutmak doğru. Sunucu tarafında hata vermemesi için "use client" önemli.
 import sdk from "@farcaster/frame-sdk";
 
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
 
-  // 1. SDK'yı Başlat (Initialize)
+  // SDK'yı SADECE BİR KEZ Başlat (Initialize)
   useEffect(() => {
-    const load = async () => {
-      // SDK'ya uygulamanın hazır olduğunu bildir
+    // SDK'ya uygulamanın hazır olduğunu bildir
+    // Bu işlem yalnızca client tarafında çalışmalıdır.
+    // Next.js'de "use client" ile bu garanti edilir.
+    if (sdk) { // SDK nesnesinin varlığını kontrol etmek her zaman iyi bir pratiktir.
       sdk.actions.ready(); 
       setIsSDKLoaded(true);
-    };
-    
-    // Sadece istemci tarafında çalıştır
-    if (sdk && !isSDKLoaded) {
-      load();
+    } else {
+      console.warn("Farcaster SDK yüklenemedi veya kullanıma hazır değil.");
+      // Hata durumunu yönetmek için burada isSDKLoaded'ı false bırakabiliriz
+      // veya bir error state'i tutabiliriz.
     }
-  }, [isSDKLoaded]);
+    // Boş bağımlılık dizisi, bu efektin sadece bileşen mount edildiğinde bir kez çalışmasını sağlar.
+  }, []); 
 
   const handleCastButton = useCallback(() => {
-    
     // Farcaster Compose Intent URL'si
-    const castUrl = "https://farcaster.xyz/~/compose?text=Hello%20World"; 
+    // Metni bir sabit değişkende tutmak veya dinamik hale getirmek daha iyi olabilir.
+    const castText = "Hello World";
+    const encodedCastText = encodeURIComponent(castText);
+    const castUrl = `https://farcaster.xyz/~/compose?text=${encodedCastText}`; 
     
     // Warpcast penceresini açar.
-    sdk.actions.openUrl(castUrl);
+    if (sdk) { // SDK'nın yüklenip yüklenmediğini tekrar kontrol etmek daha güvenli olabilir.
+        sdk.actions.openUrl(castUrl);
+    } else {
+        console.error("Farcaster SDK henüz yüklenmedi, URL açılamıyor.");
+        // Kullanıcıya bir hata mesajı gösterebiliriz.
+    }
   }, []);
 
   return (
@@ -45,6 +56,7 @@ export default function Home() {
           <button
             onClick={handleCastButton}
             className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold rounded-xl transition-all transform active:scale-95 text-lg"
+            disabled={!isSDKLoaded} // SDK yüklenene kadar butonu devre dışı bırak.
           >
             📢 &quot;Hello World&quot; Cast At 
           </button>
