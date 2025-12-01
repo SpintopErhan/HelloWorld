@@ -3,16 +3,18 @@
     "name": "HelloWorld",
     "version": "1",
     "iconUrl": "https://helloworld-six-omega.vercel.app/icon.png",
-    "homeUrl": "https://helloworld-six-omega.vercel.app/",
-    "splashImageUrl": "https://helloworld-six-omega.vercel.app/icon.png",
-    "splashBackgroundColor": "#3F48CC",
+    "homeUrl": "https://helloworld-six-omega.vercel.app",
+    "imageUrl": "https://helloworld-six-omega.vercel.app/image.png",
+    "splashImageUrl": "https://helloworld-six-omega.vercel.app/splash.png",
+    "splashBackgroundColor": "#6200EA",
+    "webhookUrl": "https://helloworld-six-omega.vercel.app/api/webhook",
     "subtitle": "Hello World",
-    "description": "Say Hello to World",
+    "description": "Say Hello to world",
     "primaryCategory": "social"
   },
   "accountAssociation": {
-    "header": "eyJmaWQiOjQ4MjAxMSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweGExREFERWIwZDFmYWUyQTExQmNjMmQ3NWYzY0ZhYjA4ODQyYUVCYTUifQ",
-    "payload": "eyJkb21haW4iOiIifQ",
-    "signature": "eyk6XnzRjphyfODmbveLFh7nyW7IhVo8jLNzu5y/BEdZc7PAtOd5AJ4XCJXRUvxy04tI05PVZJdHOHEYy5B4chs="
+    "header": "",
+    "payload": "",
+    "signature": ""
   }
 }
