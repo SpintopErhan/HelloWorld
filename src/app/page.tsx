@@ -7,7 +7,11 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>({
+    fid: 0,
+    username: "anonymous",
+    displayName: "Misafir",
+  }); // ← BAŞLANGIÇTA NULL DEĞİL, FALLBACK VAR
 
   useEffect(() => {
     const init = async () => {
@@ -18,10 +22,7 @@ export default function Home() {
         setIsSDKLoaded(true);
         await sdk.actions.addMiniApp();
 
-        // SENİN ÖNERİN – AWAIT + TIP CAST (HATA YOK)
-        const contextPromise = await sdk.context;
-        const context = contextPromise as any;  // Tip cast ile Promise'i obje yap
-
+        const context = await sdk.context;
         console.log("Context loaded:", context);
 
         if (context?.user?.fid) {
@@ -30,14 +31,8 @@ export default function Home() {
             username: context.user.username || "anonymous",
             displayName: context.user.displayName || context.user.username || "User",
           });
-        } else {
-          console.log("User yok – fallback");
-          setUser({
-            fid: 0,
-            username: "anonymous",
-            displayName: "Misafir",
-          });
         }
+        // Eğer user yoksa bile fallback zaten var, hiçbir şey yapma
       } catch (err) {
         console.error("SDK init error:", err);
       }
@@ -49,7 +44,7 @@ export default function Home() {
   const handleCast = useCallback(async () => {
     if (!isSDKLoaded) return;
 
-    const text = user
+    const text = user.fid
       ? `Hello from @${user.username}! (FID: ${user.fid})`
       : "Hello World from Farcaster Miniapp";
 
@@ -64,7 +59,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-4">
       <div className="w-full max-w-md text-center space-y-8">
 
-        {/* PROFİL – HER ZAMAN GÖRÜNÜR */}
+        {/* PROFİL – HER ZAMAN GÖRÜNÜR, NULL KONTROLÜ YOK */}
         <div className="bg-gradient-to-r from-purple-800 to-indigo-800 p-8 rounded-3xl shadow-2xl border-4 border-purple-500">
           <p className="text-3xl font-bold mb-2">Hoş geldin {user.displayName}!</p>
           <p className="text-2xl text-purple-200">@{user.username}</p>
