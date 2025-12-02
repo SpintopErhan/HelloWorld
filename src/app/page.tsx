@@ -45,7 +45,7 @@ const handleCastButton = useCallback(async () => {
     // SDK ile pencereyi aç
     await sdk.actions.openUrl(finalComposeUrl);
     
-    alert("Cast hazırlandı! Embed ile birlikte atıldı 🎉");
+  //  alert("Cast hazırlandı! Embed ile birlikte atıldı 🎉");
   } catch (err) {
     console.error("Cast hatası:", err);
     alert("Cast açılamadı.");
