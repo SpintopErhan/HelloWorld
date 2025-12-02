@@ -6,22 +6,27 @@ import { sdk } from "@farcaster/miniapp-sdk";
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
 
+  // SDK hazır olunca otomatik olarak app ekleme isteği gönder
   useEffect(() => {
-    const initSDK = async () => {
+    const init = async () => {
       if (!sdk) return;
 
       try {
         await sdk.actions.ready();
         setIsSDKLoaded(true);
+
+        // SDK hazır olur olmaz otomatik olarak ekleme isteği gönder
+        await sdk.actions.addMiniApp();
+        console.log("addMiniApp called – prompt shown if not added yet");
       } catch (err) {
-        console.error("SDK ready error:", err);
+        console.error("SDK init or addMiniApp error:", err);
       }
     };
 
-    initSDK();
+    init();
   }, []);
 
-  const handleCastButton = useCallback(async () => {
+  const handleCast = useCallback(async () => {
     if (!isSDKLoaded) return;
 
     try {
@@ -30,65 +35,35 @@ export default function Home() {
         embeds: ["https://helloworld-six-omega.vercel.app"],
       });
 
-     if (result?.cast) {
-  console.log("Cast sent! Hash:", result.cast.hash);
-} else {
-  console.log("Cast cancelled");
-}
-    } catch (err) {
-      console.error("composeCast error:", err);
-    }
-  }, [isSDKLoaded]);
-
-  const handleAddButton = useCallback(async () => {
-    if (!isSDKLoaded) return;
-
-    try {
-      await sdk.actions.addMiniApp();
-      console.log("Add Miniapp prompt shown");
-    } catch (err) {
-      const error = err as { message?: string };
-      if (error.message === "RejectedByUser") {
-        console.log("User rejected adding the app");
-      } else if (error.message === "InvalidDomainManifestJson") {
-        console.error("Manifest/domain mismatch");
-      } else {
-        console.error("addMiniApp error:", error);
+      if (result?.cast) {
+        console.log("Cast sent:", result.cast.hash);
       }
+    } catch (err) {
+      console.error("Cast error:", err);
     }
   }, [isSDKLoaded]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-4">
-      <div className="w-full max-w-md text-center space-y-6">
-        <h1 className="text-3xl font-bold tracking-tighter">
-          Miniapp Demo
-        </h1>
+      <div className="w-full max-w-md text-center space-y-8">
+        <h1 className="text-4xl font-bold tracking-tighter">Miniapp Demo</h1>
 
-        <div className="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700 space-y-4">
-          <p className="mb-6 text-slate-300">
-            Share on Farcaster and add the app!
+        <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700">
+          <p className="mb-8 text-slate-300 text-lg">
+            Welcome! Share this Miniapp with your friends
           </p>
 
           <button
-            onClick={handleCastButton}
-            className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold rounded-xl transition-all transform active:scale-95 text-lg"
+            onClick={handleCast}
             disabled={!isSDKLoaded}
+            className="w-full py-5 px-8 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold text-xl rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-lg"
           >
-            Share on Farcaster
-          </button>
-
-          <button
-            onClick={handleAddButton}
-            className="w-full py-4 px-6 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-bold rounded-xl transition-all transform active:scale-95 text-lg"
-            disabled={!isSDKLoaded}
-          >
-            Add to Apps
+            {isSDKLoaded ? "Share on Farcaster" : "Loading..."}
           </button>
         </div>
 
         {!isSDKLoaded && (
-          <p className="text-xs text-gray-500 animate-pulse">
+          <p className="text-sm text-slate-500 animate-pulse">
             Connecting to Farcaster...
           </p>
         )}
