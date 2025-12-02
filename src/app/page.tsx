@@ -3,10 +3,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
 
+type UserData = {
+  fid: number;
+  username: string;
+  displayName: string;
+  pfpUrl: string;
+};
+
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
+  const [user, setUser] = useState<UserData | null>(null);
 
-  // SDK hazır olunca otomatik olarak app ekleme isteği gönder
   useEffect(() => {
     const init = async () => {
       if (!sdk) return;
@@ -15,11 +22,21 @@ export default function Home() {
         await sdk.actions.ready();
         setIsSDKLoaded(true);
 
-        // SDK hazır olur olmaz otomatik olarak ekleme isteği gönder
+        // Otomatik app ekleme
         await sdk.actions.addMiniApp();
-        console.log("addMiniApp called – prompt shown if not added yet");
+
+        // Kullanıcı bilgilerini çek
+        const userData = await sdk.actions.getUserData();
+        setUser({
+          fid: userData.fid,
+          username: userData.username,
+          displayName: userData.displayName || userData.username,
+          pfpUrl: userData.pfpUrl,
+        });
+
+        console.log("User loaded:", userData);
       } catch (err) {
-        console.error("SDK init or addMiniApp error:", err);
+        console.error("SDK init error:", err);
       }
     };
 
@@ -27,30 +44,43 @@ export default function Home() {
   }, []);
 
   const handleCast = useCallback(async () => {
-    if (!isSDKLoaded) return;
+    if (!isSDKLoaded || !user) return;
 
     try {
-      const result = await sdk.actions.composeCast({
-        text: "Hello World from Farcaster Miniapp",
+      await sdk.actions.composeCast({
+        text: `Hello from @${user.username}! I'm using this Miniapp`,
         embeds: ["https://helloworld-six-omega.vercel.app"],
       });
-
-      if (result?.cast) {
-        console.log("Cast sent:", result.cast.hash);
-      }
     } catch (err) {
       console.error("Cast error:", err);
     }
-  }, [isSDKLoaded]);
+  }, [isSDKLoaded, user]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-4">
-      <div className="w-full max-w-md text-center space-y-8">
-        <h1 className="text-4xl font-bold tracking-tighter">Miniapp Demo</h1>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-6">
+      <div className="w-full max-w-md">
 
-        <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700">
-          <p className="mb-8 text-slate-300 text-lg">
-            Welcome! Share this Miniapp with your friends
+        {/* Kullanıcı Profili */}
+        {user && (
+          <div className="flex items-center gap-4 mb-8 bg-slate-800 p-4 rounded-2xl">
+            <img
+              src={user.pfpUrl}
+              alt={user.displayName}
+              className="w-16 h-16 rounded-full border-4 border-purple-600"
+            />
+            <div>
+              <h2 className="text-xl font-bold">{user.displayName}</h2>
+              <p className="text-slate-400">@{user.username} • FID: {user.fid}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Ana İçerik */}
+        <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 text-center">
+          <h1 className="text-4xl font-bold mb-6">Miniapp Demo</h1>
+          <p className="text-slate-300 mb-8 text-lg">
+            Welcome {user ? user.displayName.split(" ")[0] : ""}! 
+            Share this app with your friends
           </p>
 
           <button
@@ -63,7 +93,7 @@ export default function Home() {
         </div>
 
         {!isSDKLoaded && (
-          <p className="text-sm text-slate-500 animate-pulse">
+          <p className="text-sm text-slate-500 animate-pulse mt-6">
             Connecting to Farcaster...
           </p>
         )}
