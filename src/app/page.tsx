@@ -3,21 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
 
-// TypeScript'i susturmak için gerekli tip tanımı
-declare global {
-  interface Window {
-    __FARCASTER_CONTEXT__?: any;
-  }
-}
-
-// Alternatif: SDK context tipini genişlet
-interface MiniAppContext {
-  user?: {
-    fid: number;
-    username?: string;
-    displayName?: string;
-  };
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getUserFromContext = (context: any) => context?.user;
 
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
@@ -36,9 +23,8 @@ export default function Home() {
         setIsSDKLoaded(true);
         await sdk.actions.addMiniApp();
 
-        // ANY YOK! Tip tanımlı erişim
-        const context = sdk.context as unknown as MiniAppContext;
-        const userData = context?.user;
+        // ANY sadece burada, yukarıda kural devre dışı
+        const userData = getUserFromContext(sdk.context);
 
         if (userData?.fid) {
           setUser({
