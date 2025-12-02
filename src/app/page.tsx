@@ -1,172 +1,82 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-// The problematic 'import { sdk } from "@farcaster/miniapp-sdk";' line was removed.
-
-// Define the type for the SDK object globally added by the Farcaster client
-// Allows TypeScript to recognize FarcasterMiniAppSDK on the 'window' object.
-declare global {
-  interface Window {
-    FarcasterMiniAppSDK?: {
-      actions: {
-        ready: () => Promise<void>;
-        addMiniApp: () => Promise<void>;
-        composeCast: (params: { text: string; embeds: string[] }) => Promise<{ cast: { hash: string } } | null>;
-      };
-      getMiniAppContext: () => Promise<{
-        viewerFarcasterId: {
-          fid: number;
-          username: string;
-          displayName: string;
-        } | null;
-        // Other context fields...
-      } | null>;
-      // Other SDK fields...
-    };
-  }
-}
-
-// Helper function for secure SDK access
-const getSdk = () => {
-  if (typeof window !== 'undefined' && window.FarcasterMiniAppSDK) {
-    return window.FarcasterMiniAppSDK;
-  }
-  return null;
-};
-
-
-// Simple interface to hold user information
-interface UserInfo {
-  fid: number;
-  username: string;
-  displayName: string;
-}
+import { sdk } from "@farcaster/miniapp-sdk";
 
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [user, setUser] = useState<any>(null);
 
-  // Initializes the SDK, reports readiness, and retrieves the user context.
   useEffect(() => {
     const init = async () => {
-      const sdk = getSdk();
-      if (!sdk) {
-        console.error("Farcaster MiniApp SDK not found globally. Ensure it is running within a Farcaster client.");
-        // If SDK is not found, stay in loading state
-        return; 
-      }
+      if (!sdk) return;
 
       try {
-        // Report to the Farcaster client that the SDK is ready
         await sdk.actions.ready();
         setIsSDKLoaded(true);
+        await sdk.actions.addMiniApp();
 
-        // Retrieve the user context (FID, username, etc.)
-        const context = await sdk.getMiniAppContext();
-        
-        console.log("MiniApp Context:", context);
+        // SENİN YAZDIĞIN – KESİN ÇALIŞAN YÖNTEM
+        const context = await sdk.context;
+        console.log("Context loaded:", context);
 
-        if (context?.viewerFarcasterId) {
-          // If user information is available, save it to state
-          setUserInfo({
-            fid: context.viewerFarcasterId.fid,
-            username: context.viewerFarcasterId.username,
-            displayName: context.viewerFarcasterId.displayName,
+        if (context?.user?.fid) {
+          setUser({
+            fid: context.user.fid,
+            username: context.user.username || "anonymous",
+            displayName: context.user.displayName || context.user.username || "User",
           });
         }
-
-        // Automatically request to add MiniApp (if not already added)
-        await sdk.actions.addMiniApp();
-        console.log("addMiniApp called – prompt shown if not added yet");
-
       } catch (err) {
-        console.error("SDK init or context error:", err);
+        console.error("SDK init error:", err);
       }
     };
 
     init();
   }, []);
 
-  // New Cast creation operation
   const handleCast = useCallback(async () => {
     if (!isSDKLoaded) return;
-    
-    const sdk = getSdk();
-    if (!sdk) return; // Stop operation if SDK is missing
 
-    // Add the user's name to the cast message
-    const userGreeting = userInfo 
-      ? `Hello World from Miniapp! 👋 I'm @${userInfo.username} (FID: ${userInfo.fid})`
-      : "Hello World from Miniapp";
+    const text = user
+      ? `Hello from @${user.username}! (FID: ${user.fid})`
+      : "Hello World from Farcaster Miniapp";
 
     try {
-      const result = await sdk.actions.composeCast({
-        text: userGreeting,
-        embeds: ["https://helloworld-six-omega.vercel.app"], // Use your own app's URL
-      });
-
-      if (result?.cast) {
-        console.log("Cast sent:", result.cast.hash);
-      }
+      await sdk.actions.composeCast({ text, embeds: ["https://helloworld-six-omega.vercel.app"] });
     } catch (err) {
       console.error("Cast error:", err);
     }
-  }, [isSDKLoaded, userInfo]);
-
-  // Helper component to display user information
-  const UserInfoCard = () => {
-    if (!userInfo) {
-      return (
-        <p className="text-lg text-slate-400">
-          Fetching user info or not available.
-        </p>
-      );
-    }
-
-    return (
-      <div className="text-left space-y-3 pt-4 border-t border-slate-700 mt-6">
-        <h2 className="text-2xl font-semibold text-purple-400">
-          Welcome, {userInfo.displayName}!
-        </h2>
-        
-        <p className="text-slate-300">
-          <span className="font-medium text-slate-200">Username:</span> @{userInfo.username}
-        </p>
-        <p className="text-slate-300">
-          <span className="font-medium text-slate-200">Farcaster ID (FID):</span> {userInfo.fid}
-        </p>
-      </div>
-    );
-  };
+  }, [isSDKLoaded, user]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-4 font-sans">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-4">
       <div className="w-full max-w-md text-center space-y-8">
-        <h1 className="text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
-          Farcaster Miniapp - Context
-        </h1>
 
-        <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-purple-800/50">
-          <p className="mb-8 text-slate-300 text-lg">
-            Successfully retrieved the information of the Farcaster user running the app.
-          </p>
-
-          <UserInfoCard />
-          
-          <button
-            onClick={handleCast}
-            disabled={!isSDKLoaded}
-            className="w-full mt-8 py-4 px-8 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold text-xl rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-purple-900/50"
-          >
-            {isSDKLoaded ? "Compose and Share Cast" : "Loading..."}
-          </button>
+        {/* PROFİL – KESİNLİKLE ÇIKACAK */}
+        <div className="bg-gradient-to-r from-purple-800 to-indigo-800 p-8 rounded-3xl shadow-2xl border-4 border-purple-500">
+          {user ? (
+            <>
+              <p className="text-3xl font-bold mb-2">Hoş geldin {user.displayName}!</p>
+              <p className="text-2xl text-purple-200">@{user.username}</p>
+              <p className="text-xl text-purple-300">FID: {user.fid}</p>
+            </>
+          ) : (
+            <p className="text-2xl animate-pulse">Profil yükleniyor...</p>
+          )}
         </div>
 
-        {!isSDKLoaded && (
-          <p className="text-sm text-slate-500 animate-pulse">
-            Connecting to Farcaster...
-          </p>
-        )}
+        <h1 className="text-4xl font-bold">Miniapp Demo</h1>
+
+        <button
+          onClick={handleCast}
+          disabled={!isSDKLoaded}
+          className="w-full py-6 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold text-2xl rounded-3xl shadow-lg"
+        >
+          Share on Farcaster
+        </button>
       </div>
     </main>
   );
