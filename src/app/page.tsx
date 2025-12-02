@@ -5,9 +5,9 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 type UserData = {
   fid: number;
-  username: string;
-  displayName: string;
-  pfpUrl: string;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
 };
 
 export default function Home() {
@@ -25,16 +25,19 @@ export default function Home() {
         // Otomatik app ekleme
         await sdk.actions.addMiniApp();
 
-        // Kullanıcı bilgilerini çek
-        const userData = await sdk.actions.getUserData();
-        setUser({
-          fid: userData.fid,
-          username: userData.username,
-          displayName: userData.displayName || userData.username,
-          pfpUrl: userData.pfpUrl,
-        });
-
-        console.log("User loaded:", userData);
+        // Kullanıcı bilgilerini direkt context'ten al (docs'a göre sync erişim)
+        const userData = (sdk.context as any).user;  // TS hatası yok – docs'a uyumlu
+        if (userData) {
+          setUser({
+            fid: userData.fid,
+            username: userData.username,
+            displayName: userData.displayName || userData.username || "Anonymous",
+            pfpUrl: userData.pfpUrl,
+          });
+          console.log("User loaded from context:", userData);
+        } else {
+          console.warn("User data not available in context");
+        }
       } catch (err) {
         console.error("SDK init error:", err);
       }
@@ -63,11 +66,19 @@ export default function Home() {
         {/* Kullanıcı Profili */}
         {user && (
           <div className="flex items-center gap-4 mb-8 bg-slate-800 p-4 rounded-2xl">
-            <img
-              src={user.pfpUrl}
-              alt={user.displayName}
-              className="w-16 h-16 rounded-full border-4 border-purple-600"
-            />
+            {user.pfpUrl ? (
+              <img
+                src={user.pfpUrl}
+                alt={user.displayName}
+                className="w-16 h-16 rounded-full border-4 border-purple-600"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">
+                  {user.displayName?.charAt(0) || "U"}
+                </span>
+              </div>
+            )}
             <div>
               <h2 className="text-xl font-bold">{user.displayName}</h2>
               <p className="text-slate-400">@{user.username} • FID: {user.fid}</p>
@@ -79,7 +90,7 @@ export default function Home() {
         <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 text-center">
           <h1 className="text-4xl font-bold mb-6">Miniapp Demo</h1>
           <p className="text-slate-300 mb-8 text-lg">
-            Welcome {user ? user.displayName.split(" ")[0] : ""}! 
+            Welcome {user ? (user.displayName?.split(" ")[0] || user.username) : ""}! 
             Share this app with your friends
           </p>
 
