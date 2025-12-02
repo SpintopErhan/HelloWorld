@@ -14,33 +14,34 @@ export default function Home() {
   }); // ← BAŞLANGIÇTA NULL DEĞİL, FALLBACK VAR
 
   useEffect(() => {
-    const init = async () => {
-      if (!sdk) return;
+  const init = async () => {
+    if (!sdk) return;
 
-      try {
-        await sdk.actions.ready();
-        setIsSDKLoaded(true);
-        await sdk.actions.addMiniApp();
+    try {
+      await sdk.actions.ready();
+      setIsSDKLoaded(true);
 
-        const context = await sdk.context;
-        console.log("Context loaded:", context);
+      // Kullanıcı izni al → user bilgisi gelir
+      await sdk.actions.addMiniApp();
 
-        if (context?.user?.fid) {
-          setUser({
-            fid: context.user.fid,
-            username: context.user.username || "anonymous",
-            displayName: context.user.displayName || context.user.username || "User",
-          });
-        }
-        // Eğer user yoksa bile fallback zaten var, hiçbir şey yapma
-      } catch (err) {
-        console.error("SDK init error:", err);
+      // Artık user dolu!
+      const context = await sdk.context;
+      console.log("Context loaded:", context);
+
+      if (context?.user?.fid) {
+        setUser({
+          fid: context.user.fid,
+          username: context.user.username || "anonymous",
+          displayName: context.user.displayName || context.user.username || "User",
+        });
       }
-    };
+    } catch (err) {
+      console.error("SDK init error:", err);
+    }
+  };
 
-    init();
-  }, []);
-
+  init();
+}, []);
   const handleCast = useCallback(async () => {
     if (!isSDKLoaded) return;
 
