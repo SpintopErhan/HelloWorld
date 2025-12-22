@@ -39,9 +39,14 @@ export default function Home() {
       setCastText(""); // Başarılı olursa metni temizle
       setCastSuccess(true);
       console.log("Cast başarıyla atıldı!");
-    } catch (err: any) {
+    } catch (err: unknown) { // Hata düzeltme: 'any' yerine 'unknown' kullanıldı
       console.error("Cast atılırken hata oluştu:", err);
-      setCastError(err.message || "Cast atılırken bilinmeyen bir hata oluştu.");
+      // Hata nesnesini kontrol ederek mesajına erişiyoruz
+      if (err instanceof Error) {
+        setCastError(err.message);
+      } else {
+        setCastError("Cast atılırken bilinmeyen bir hata oluştu.");
+      }
     } finally {
       setIsCasting(false);
     }
@@ -65,7 +70,7 @@ export default function Home() {
         )}
         {user.fid === 0 && ( // ANONYMOUS_USER.fid varsayılan olarak 0 veya benzeri bir değerse
           <p className="text-red-300 mt-2">
-            MiniApp'i kullanabilmek için Farcaster'da oturum açmanız gerekebilir.
+            MiniApp&apos;i kullanabilmek için Farcaster&apos;da oturum açmanız gerekebilir. {/* Hata düzeltme: Tek tırnaklar kaçıldı */}
           </p>
         )}
       </div>
