@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useFarcasterMiniApp } from "@/hooks/useFarcasterMiniApp"; // Hook'unuzu import edin
+import { useFarcasterMiniApp } from "@/hooks/useFarcasterMiniApp"; // Import your hook
 
 export default function Home() {
   const { user, status, error, composeCast } = useFarcasterMiniApp();
@@ -12,12 +12,12 @@ export default function Home() {
   const [castError, setCastError] = useState<string | null>(null);
   const [castSuccess, setCastSuccess] = useState<boolean>(false);
 
-  // Sayfa yüklendiğinde veya kullanıcı oturumu açıldığında otomatik olarak bir cast atmak isterseniz:
+  // If you want to automatically cast on page load or user login, uncomment this:
   /*
   useEffect(() => {
     if (status === "loaded" && user.fid !== ANONYMOUS_USER.fid && !hasCastedOnce.current) {
-      hasCastedOnce.current = true; // Sadece bir kez atmak için
-      composeCast("Merhaba Farcaster! #miniapp").catch(console.error);
+      hasCastedOnce.current = true; // To cast only once
+      composeCast("Hello Farcaster! #miniapp").catch(console.error);
     }
   }, [status, user.fid, composeCast]);
   */
@@ -25,7 +25,7 @@ export default function Home() {
   const handleComposeCast = async (e: FormEvent) => {
     e.preventDefault();
     if (!castText.trim()) {
-      setCastError("Lütfen bir metin girin.");
+      setCastError("Please enter some text."); // Translated
       return;
     }
 
@@ -34,18 +34,17 @@ export default function Home() {
     setIsCasting(true);
 
     try {
-      // composeCast fonksiyonunu kullanıyoruz
+      // Using the composeCast function
       await composeCast(castText);
-      setCastText(""); // Başarılı olursa metni temizle
+      setCastText(""); // Clear text on success
       setCastSuccess(true);
-      console.log("Cast başarıyla atıldı!");
-    } catch (err: unknown) { // Hata düzeltme: 'any' yerine 'unknown' kullanıldı
-      console.error("Cast atılırken hata oluştu:", err);
-      // Hata nesnesini kontrol ederek mesajına erişiyoruz
+      console.log("Cast sent successfully!"); // Translated (for console)
+    } catch (err: unknown) {
+      console.error("Error casting:", err); // Translated (for console)
       if (err instanceof Error) {
         setCastError(err.message);
       } else {
-        setCastError("Cast atılırken bilinmeyen bir hata oluştu.");
+        setCastError("An unknown error occurred while casting."); // Translated
       }
     } finally {
       setIsCasting(false);
@@ -57,31 +56,31 @@ export default function Home() {
       <h1 className="text-4xl font-bold mb-8 text-blue-400">Farcaster MiniApp</h1>
 
       <div className="mb-6 text-lg text-center">
-        {status === "loading" && <p className="text-yellow-400">Farcaster SDK yükleniyor...</p>}
-        {status === "error" && <p className="text-red-500">Hata: {error?.message || "Bilinmeyen bir hata oluştu."}</p>}
+        {status === "loading" && <p className="text-yellow-400">Loading Farcaster SDK...</p>} {/* Translated */}
+        {status === "error" && <p className="text-red-500">Error: {error?.message || "An unknown error occurred."}</p>} {/* Translated */}
         {status === "loaded" && (
           <p>
-            Hoş geldin,{" "}
+            Welcome,{" "} {/* Translated */}
             <span className="font-semibold text-green-400">
               {user.displayName}
             </span>{" "}
             (FID: {user.fid})
           </p>
         )}
-        {user.fid === 0 && ( // ANONYMOUS_USER.fid varsayılan olarak 0 veya benzeri bir değerse
+        {user.fid === 0 && ( // Assuming ANONYMOUS_USER.fid is 0 or similar by default
           <p className="text-red-300 mt-2">
-            MiniApp&apos;i kullanabilmek için Farcaster&apos;da oturum açmanız gerekebilir. {/* Hata düzeltme: Tek tırnaklar kaçıldı */}
+            You might need to log in to Farcaster to use the MiniApp. {/* Translated */}
           </p>
         )}
       </div>
 
       <div className="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold mb-4 text-center">Yeni Cast Oluştur</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-center">Create New Cast</h2> {/* Translated */}
         <form onSubmit={handleComposeCast} className="flex flex-col gap-4">
           <textarea
             className="w-full p-3 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
             rows={4}
-            placeholder="Ne düşünüyorsun?"
+            placeholder="What's on your mind?" // Translated
             value={castText}
             onChange={(e) => setCastText(e.target.value)}
             disabled={status !== "loaded" || user.fid === 0 || isCasting}
@@ -95,16 +94,16 @@ export default function Home() {
             }`}
             disabled={status !== "loaded" || user.fid === 0 || isCasting}
           >
-            {isCasting ? "Gönderiliyor..." : "Cast At"}
+            {isCasting ? "Sending..." : "Cast"} {/* Translated */}
           </button>
         </form>
 
         {castError && (
           <p className="mt-4 text-red-400 text-center">{castError}</p>
         )}
-        {castSuccess && (
-          <p className="mt-4 text-green-400 text-center">Cast başarıyla gönderildi!</p>
-        )}
+        {castSuccess && // Parantezler kaldırıldı
+          <p className="mt-4 text-green-400 text-center">Cast sent successfully!</p>
+        }
       </div>
     </div>
   );
