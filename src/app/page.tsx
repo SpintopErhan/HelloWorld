@@ -1,82 +1,106 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
+// app/page.tsx
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { sdk } from "@farcaster/miniapp-sdk";
+import { useState, FormEvent } from "react";
+import { useFarcasterMiniApp } from "@/hooks/useFarcasterMiniApp"; // Hook'unuzu import edin
 
 export default function Home() {
-  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
-  const [user, setUser] = useState<any>({
-    fid: 0,
-    username: "anonymous",
-    displayName: "Misafir",
-  }); // ← BAŞLANGIÇTA NULL DEĞİL, FALLBACK VAR
+  const { user, status, error, composeCast } = useFarcasterMiniApp();
 
+  const [castText, setCastText] = useState<string>("");
+  const [isCasting, setIsCasting] = useState<boolean>(false);
+  const [castError, setCastError] = useState<string | null>(null);
+  const [castSuccess, setCastSuccess] = useState<boolean>(false);
+
+  // Sayfa yüklendiğinde veya kullanıcı oturumu açıldığında otomatik olarak bir cast atmak isterseniz:
+  /*
   useEffect(() => {
-  const init = async () => {
-    if (!sdk) return;
+    if (status === "loaded" && user.fid !== ANONYMOUS_USER.fid && !hasCastedOnce.current) {
+      hasCastedOnce.current = true; // Sadece bir kez atmak için
+      composeCast("Merhaba Farcaster! #miniapp").catch(console.error);
+    }
+  }, [status, user.fid, composeCast]);
+  */
+
+  const handleComposeCast = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!castText.trim()) {
+      setCastError("Lütfen bir metin girin.");
+      return;
+    }
+
+    setCastError(null);
+    setCastSuccess(false);
+    setIsCasting(true);
 
     try {
-      await sdk.actions.ready();
-      setIsSDKLoaded(true);
-
-      // Kullanıcı izni al → user bilgisi gelir
-      await sdk.actions.addMiniApp();
-
-      // Artık user dolu!
-      const context = await sdk.context;
-      console.log("Context loaded:", context);
-
-      if (context?.user?.fid) {
-        setUser({
-          fid: context.user.fid,
-          username: context.user.username || "anonymous",
-          displayName: context.user.displayName || context.user.username || "User",
-        });
-      }
-    } catch (err) {
-      console.error("SDK init error:", err);
+      // composeCast fonksiyonunu kullanıyoruz
+      await composeCast(castText);
+      setCastText(""); // Başarılı olursa metni temizle
+      setCastSuccess(true);
+      console.log("Cast başarıyla atıldı!");
+    } catch (err: any) {
+      console.error("Cast atılırken hata oluştu:", err);
+      setCastError(err.message || "Cast atılırken bilinmeyen bir hata oluştu.");
+    } finally {
+      setIsCasting(false);
     }
   };
 
-  init();
-}, []);
-  const handleCast = useCallback(async () => {
-    if (!isSDKLoaded) return;
-
-    const text = user.fid
-      ? `Hello from @${user.username}! (FID: ${user.fid})`
-      : "Hello World from Farcaster Miniapp";
-
-    try {
-      await sdk.actions.composeCast({ text, embeds: ["https://helloworld-six-omega.vercel.app"] });
-    } catch (err) {
-      console.error("Cast error:", err);
-    }
-  }, [isSDKLoaded, user]);
-
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-4">
-      <div className="w-full max-w-md text-center space-y-8">
+    <div className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-900 text-white">
+      <h1 className="text-4xl font-bold mb-8 text-blue-400">Farcaster MiniApp</h1>
 
-        {/* PROFİL – HER ZAMAN GÖRÜNÜR, NULL KONTROLÜ YOK */}
-        <div className="bg-gradient-to-r from-purple-800 to-indigo-800 p-8 rounded-3xl shadow-2xl border-4 border-purple-500">
-          <p className="text-3xl font-bold mb-2">Hoş geldin {user.displayName}!</p>
-          <p className="text-2xl text-purple-200">@{user.username}</p>
-          <p className="text-xl text-purple-300">FID: {user.fid}</p>
-        </div>
-
-        <h1 className="text-4xl font-bold">Miniapp Demo</h1>
-
-        <button
-          onClick={handleCast}
-          disabled={!isSDKLoaded}
-          className="w-full py-6 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold text-2xl rounded-3xl shadow-lg"
-        >
-          Share on Farcaster
-        </button>
+      <div className="mb-6 text-lg text-center">
+        {status === "loading" && <p className="text-yellow-400">Farcaster SDK yükleniyor...</p>}
+        {status === "error" && <p className="text-red-500">Hata: {error?.message || "Bilinmeyen bir hata oluştu."}</p>}
+        {status === "loaded" && (
+          <p>
+            Hoş geldin,{" "}
+            <span className="font-semibold text-green-400">
+              {user.displayName}
+            </span>{" "}
+            (FID: {user.fid})
+          </p>
+        )}
+        {user.fid === 0 && ( // ANONYMOUS_USER.fid varsayılan olarak 0 veya benzeri bir değerse
+          <p className="text-red-300 mt-2">
+            MiniApp'i kullanabilmek için Farcaster'da oturum açmanız gerekebilir.
+          </p>
+        )}
       </div>
-    </main>
+
+      <div className="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-semibold mb-4 text-center">Yeni Cast Oluştur</h2>
+        <form onSubmit={handleComposeCast} className="flex flex-col gap-4">
+          <textarea
+            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
+            rows={4}
+            placeholder="Ne düşünüyorsun?"
+            value={castText}
+            onChange={(e) => setCastText(e.target.value)}
+            disabled={status !== "loaded" || user.fid === 0 || isCasting}
+          ></textarea>
+          <button
+            type="submit"
+            className={`py-3 px-6 rounded-md font-bold text-white transition-colors duration-200 ${
+              status !== "loaded" || user.fid === 0 || isCasting
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+            disabled={status !== "loaded" || user.fid === 0 || isCasting}
+          >
+            {isCasting ? "Gönderiliyor..." : "Cast At"}
+          </button>
+        </form>
+
+        {castError && (
+          <p className="mt-4 text-red-400 text-center">{castError}</p>
+        )}
+        {castSuccess && (
+          <p className="mt-4 text-green-400 text-center">Cast başarıyla gönderildi!</p>
+        )}
+      </div>
+    </div>
   );
 }
